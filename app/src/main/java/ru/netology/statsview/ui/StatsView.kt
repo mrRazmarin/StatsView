@@ -80,18 +80,29 @@ class StatsView @JvmOverloads constructor(
             return
         }
 
+        val total = data.sum()
+        if (total <= 0F) return
+
         var startAngle = -90F
+        var totalAngle = 0F
+
         data.forEachIndexed { index, datum ->
-            val angle = datum * 360F
+            val angle = (datum / total) * 360F
+            totalAngle += angle
+
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
 
+        val totalPercent = (totalAngle / 360F) * 100
+
+        val textY = center.y - (textPaint.descent() + textPaint.ascent()) / 2
+
         canvas.drawText(
-            "%.0f%%".format(data.sum() * 100),
-            center.y + textPaint.textSize / 4,
+            "%.0f%%".format(totalPercent),
             center.x,
+            textY,
             textPaint
         )
     }
