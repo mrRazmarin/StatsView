@@ -4,10 +4,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PointF
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import ru.netology.statsview.utils.AndroidUtils
 import kotlin.math.min
+import kotlin.random.Random
 
 
 class StatsView @JvmOverloads constructor(
@@ -21,9 +23,15 @@ class StatsView @JvmOverloads constructor(
     defStyleAttr,
     defStyleRes,
 ) {
+    var data: List<Float> = emptyList()
+        set(value) {
+            field = value
+            invalidate()
+        }
     private var radius = 0F
     private var center = PointF()
     private val lineWidth = AndroidUtils.dp(context, 5)
+    private var oval = RectF()
     private val paint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
@@ -32,13 +40,43 @@ class StatsView @JvmOverloads constructor(
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
+    private val textPaint = Paint(
+        Paint.ANTI_ALIAS_FLAG
+    ).apply {
+        textSize = AndroidUtils.dp(context, 20).toFloat()
+        style = Paint.Style.FILL
+        textAlign = Paint.Align.CENTER
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         radius = min(w, h) / 2F - AndroidUtils.dp(context, 5)
         center = PointF(w / 2F, h / 2F)
+        oval = RectF(
+            center.x - radius,
+            center.y - radius,
+            center.x + radius,
+            center.y + radius
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
-        canvas.drawCircle(center.x, center.y, radius, paint)
+        if (data.isEmpty()) {
+            return
+        }
+
+        var startAngle = -90F
+        data.forEach {
+            val angle = it * 360F
+            paint.color = Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt())
+            canvas.drawArc(oval, startAngle, angle, false, paint)
+            startAngle += angle
+        }
+
+        canvas.drawText(
+            "%.0f%%".format(data.sum() * 100),
+            center.y + textPaint.textSize / 4,
+            center.x,
+            textPaint
+        )
     }
 }
