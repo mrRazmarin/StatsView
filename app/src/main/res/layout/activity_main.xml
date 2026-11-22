@@ -11,9 +11,15 @@
         android:id="@+id/stats_view"
         android:layout_width="300dp"
         android:layout_height="300dp"
+        app:color_four="#582012"
+        app:color_one="#391279"
+        app:color_three="#182957"
+        app:color_two="#939124"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:line_width="16dp"
+        app:text_size="40sp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
