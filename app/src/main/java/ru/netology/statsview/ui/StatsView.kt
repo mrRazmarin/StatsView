@@ -7,6 +7,8 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.content.withStyledAttributes
+import ru.netology.statsview.R
 import ru.netology.statsview.utils.AndroidUtils
 import kotlin.math.min
 import kotlin.random.Random
@@ -23,6 +25,24 @@ class StatsView @JvmOverloads constructor(
     defStyleAttr,
     defStyleRes,
 ) {
+    private var textSize = AndroidUtils.dp(context, 20).toFloat()
+    private var lineWidth = AndroidUtils.dp(context, 5)
+    private var colors = emptyList<Int>()
+
+    init {
+        context.withStyledAttributes(attributeSet, R.styleable.StatsView) {
+            textSize = getDimension(R.styleable.StatsView_text_size, textSize)
+            lineWidth = getDimension(R.styleable.StatsView_line_width, lineWidth.toFloat()).toInt()
+
+            colors = listOf(
+                getColor(R.styleable.StatsView_color_one, generateRandomColor()),
+                getColor(R.styleable.StatsView_color_two, generateRandomColor()),
+                getColor(R.styleable.StatsView_color_three, generateRandomColor()),
+                getColor(R.styleable.StatsView_color_four, generateRandomColor()),
+            )
+        }
+    }
+
     var data: List<Float> = emptyList()
         set(value) {
             field = value
@@ -30,7 +50,6 @@ class StatsView @JvmOverloads constructor(
         }
     private var radius = 0F
     private var center = PointF()
-    private val lineWidth = AndroidUtils.dp(context, 5)
     private var oval = RectF()
     private val paint = Paint(
         Paint.ANTI_ALIAS_FLAG
@@ -43,7 +62,7 @@ class StatsView @JvmOverloads constructor(
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
-        textSize = AndroidUtils.dp(context, 20).toFloat()
+        textSize = this@StatsView.textSize
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
     }
@@ -52,10 +71,7 @@ class StatsView @JvmOverloads constructor(
         radius = min(w, h) / 2F - AndroidUtils.dp(context, 5)
         center = PointF(w / 2F, h / 2F)
         oval = RectF(
-            center.x - radius,
-            center.y - radius,
-            center.x + radius,
-            center.y + radius
+            center.x - radius, center.y - radius, center.x + radius, center.y + radius
         )
     }
 
@@ -65,9 +81,9 @@ class StatsView @JvmOverloads constructor(
         }
 
         var startAngle = -90F
-        data.forEach {
-            val angle = it * 360F
-            paint.color = Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt())
+        data.forEachIndexed { index, datum ->
+            val angle = datum * 360F
+            paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
@@ -79,4 +95,6 @@ class StatsView @JvmOverloads constructor(
             textPaint
         )
     }
+
+    private fun generateRandomColor(): Int = Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt())
 }
