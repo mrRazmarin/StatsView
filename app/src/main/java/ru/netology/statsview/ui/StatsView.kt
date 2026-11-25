@@ -15,7 +15,6 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
 
-
 class StatsView @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null,
@@ -35,7 +34,6 @@ class StatsView @JvmOverloads constructor(
         context.withStyledAttributes(attributeSet, R.styleable.StatsView) {
             textSize = getDimension(R.styleable.StatsView_text_size, textSize)
             lineWidth = getDimension(R.styleable.StatsView_line_width, lineWidth.toFloat()).toInt()
-
             colors = listOf(
                 getColor(R.styleable.StatsView_color_one, generateRandomColor()),
                 getColor(R.styleable.StatsView_color_two, generateRandomColor()),
@@ -50,9 +48,17 @@ class StatsView @JvmOverloads constructor(
             field = value
             invalidate()
         }
+
+    var progress: Float = 0f
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     private var radius = 0F
     private var center = PointF()
     private var oval = RectF()
+
     private val paint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
@@ -61,6 +67,7 @@ class StatsView @JvmOverloads constructor(
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.BUTT
     }
+
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
@@ -81,42 +88,37 @@ class StatsView @JvmOverloads constructor(
         if (data.isEmpty()) {
             return
         }
-
         val total = data.sum()
         if (total <= 0F) return
 
-        var startAngle = -90F
+        var startAngle = -90F + progress * 360F
 
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.BUTT
-
         data.forEachIndexed { index, datum ->
-            val angle = (datum / total) * 360F
+            val fullAngle = (datum / total) * 360F
+            val animatedAngle = fullAngle * progress
             paint.color = colors.getOrElse(index) { generateRandomColor() }
-            canvas.drawArc(oval, startAngle, angle, false, paint)
-            startAngle += angle
+            canvas.drawArc(oval, startAngle, animatedAngle, false, paint)
+            startAngle += fullAngle // Сдвигаем startAngle на полный угол следующего сектора
         }
 
-        startAngle = -90F
+        startAngle = -90F + progress * 360F
         paint.style = Paint.Style.FILL
-
         data.forEachIndexed { index, datum ->
-            val angle = (datum / total) * 360F
-            val endAngle = startAngle + angle
+            val fullAngle = (datum / total) * 360F
+            val animatedAngle = fullAngle * progress
+            val endAngle = startAngle + animatedAngle
             val endAngleRad = Math.toRadians(endAngle.toDouble())
-
             val endX = center.x + radius * cos(endAngleRad).toFloat()
             val endY = center.y + radius * sin(endAngleRad).toFloat()
-
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawCircle(endX, endY, lineWidth / 2f, paint)
-
-            startAngle = endAngle
+            startAngle += fullAngle
         }
 
         val textY = center.y - (textPaint.descent() + textPaint.ascent()) / 2
         val totalPercent = (data.sum() / total) * 100F
-
         canvas.drawText(
             "%.2f%%".format(totalPercent),
             center.x,
