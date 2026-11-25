@@ -10,7 +10,9 @@ import android.view.View
 import androidx.core.content.withStyledAttributes
 import ru.netology.statsview.R
 import ru.netology.statsview.utils.AndroidUtils
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 import kotlin.random.Random
 
 
@@ -57,7 +59,7 @@ class StatsView @JvmOverloads constructor(
         strokeWidth = lineWidth.toFloat()
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
-        strokeCap = Paint.Cap.ROUND
+        strokeCap = Paint.Cap.BUTT
     }
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
@@ -80,18 +82,45 @@ class StatsView @JvmOverloads constructor(
             return
         }
 
+        val total = data.sum()
+        if (total <= 0F) return
+
         var startAngle = -90F
+
+        paint.style = Paint.Style.STROKE
+        paint.strokeCap = Paint.Cap.BUTT
+
         data.forEachIndexed { index, datum ->
-            val angle = datum * 360F
+            val angle = (datum / total) * 360F
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
 
+        startAngle = -90F
+        paint.style = Paint.Style.FILL
+
+        data.forEachIndexed { index, datum ->
+            val angle = (datum / total) * 360F
+            val endAngle = startAngle + angle
+            val endAngleRad = Math.toRadians(endAngle.toDouble())
+
+            val endX = center.x + radius * cos(endAngleRad).toFloat()
+            val endY = center.y + radius * sin(endAngleRad).toFloat()
+
+            paint.color = colors.getOrElse(index) { generateRandomColor() }
+            canvas.drawCircle(endX, endY, lineWidth / 2f, paint)
+
+            startAngle = endAngle
+        }
+
+        val textY = center.y - (textPaint.descent() + textPaint.ascent()) / 2
+        val totalPercent = (data.sum() / total) * 100F
+
         canvas.drawText(
-            "%.0f%%".format(data.sum() * 100),
-            center.y + textPaint.textSize / 4,
+            "%.2f%%".format(totalPercent),
             center.x,
+            textY,
             textPaint
         )
     }

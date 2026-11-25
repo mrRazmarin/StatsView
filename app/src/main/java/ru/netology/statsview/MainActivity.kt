@@ -1,7 +1,6 @@
 package ru.netology.statsview
 
 import android.os.Bundle
-import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -19,10 +18,10 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         findViewById<StatsView>(R.id.stats_view).data = listOf(
-            0.25F,
-            0.25F,
-            0.25F,
-            0.25F,
+            500F,
+            500F,
+            500F,
+            500F
         )
     }
 }
